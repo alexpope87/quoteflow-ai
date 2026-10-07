@@ -1,0 +1,166 @@
+{
+  "name": "QuoteFlow - Approve & Send",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "quoteflow-approve",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "fda1ce04-f785-48f3-bfaa-3d76b5d584bf",
+      "name": "Webhook",
+      "webhookId": "be792ab2-38bd-4b94-bf00-17a1a17a45bb"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "655777ad-5e3f-4463-a0fc-2624983b3788",
+              "name": "request_id",
+              "value": "={{$json.body.request_id}}",
+              "type": "string"
+            },
+            {
+              "id": "797ef3e0-96db-4529-a9e5-698a9de1002e",
+              "name": "recipient_email",
+              "value": "={{ $json.body.recipient_email.match(/<([^>]+)>/)?.[1] || $json.body.recipient_email }}",
+              "type": "string"
+            },
+            {
+              "id": "d5f9229d-f545-4bde-b0c4-f8f7eb2afa49",
+              "name": "reply_text",
+              "value": "={{$json.body.reply_text}}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        224,
+        0
+      ],
+      "id": "f184cc73-cc5a-47fb-a44f-cd147f6f549a",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "fromEmail": "alessandropapa87@gmail.com",
+        "toEmail": "={{$json.recipient_email}}",
+        "subject": "Risposta preventivo",
+        "html": "=<p>{{ $json.reply_text.replace(/\\n/g, '<br>') }}</p>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        448,
+        0
+      ],
+      "id": "e3218418-521b-4c78-a1a1-6228a00e0add",
+      "name": "Send an Email",
+      "webhookId": "64ea6d68-c5a0-46e5-af70-20bb629f7026",
+      "credentials": {
+        "smtp": {
+          "id": "Q27MHhSMTYHZ1jO9",
+          "name": "SMTP account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "quote_requests",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $('Edit Fields').item.json.request_id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "status",
+              "fieldValue": "SENT"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        672,
+        0
+      ],
+      "id": "ec6576bc-6602-4475-9ff3-5311573b5619",
+      "name": "Update a row",
+      "credentials": {
+        "supabaseApi": {
+          "id": "qxCcsJn5yD2Y6we6",
+          "name": "Supabase account 3"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Send an Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send an Email": {
+      "main": [
+        [
+          {
+            "node": "Update a row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "01fa6713-5d0b-4c48-97f5-271cd4a1386c",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "c80684caaf4ad284acde007346c1230969d433c0fdf94f65066ccea54d4c69ee"
+  },
+  "nodeGroups": [],
+  "id": "wcLzBSv1W3rpeCqG",
+  "tags": []
+}
