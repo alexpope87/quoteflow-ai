@@ -54,7 +54,7 @@
     },
     {
       "parameters": {
-        "fromEmail": "alessandropapa87@gmail.com",
+        "fromEmail": "sender@example.com",
         "toEmail": "={{$json.recipient_email}}",
         "subject": "Risposta preventivo",
         "html": "=<p>{{ $json.reply_text.replace(/\\n/g, '<br>') }}</p>",
@@ -71,7 +71,7 @@
       "webhookId": "64ea6d68-c5a0-46e5-af70-20bb629f7026",
       "credentials": {
         "smtp": {
-          "id": "Q27MHhSMTYHZ1jO9",
+          "id": "SMTP account ID",
           "name": "SMTP account"
         }
       }
@@ -108,8 +108,8 @@
       "name": "Update a row",
       "credentials": {
         "supabaseApi": {
-          "id": "qxCcsJn5yD2Y6we6",
-          "name": "Supabase account 3"
+          "id": "Supabase account ID",
+          "name": "Supabase account"
         }
       }
     }
