@@ -435,10 +435,10 @@
     "executionOrder": "v1",
     "binaryMode": "separate"
   },
-  "versionId": "2b9d6a32-13c8-4642-a1ba-79e80f4bd6ab",
+  "versionId": "yourversionid",
   "meta": {
     "templateCredsSetupCompleted": true,
-    "instanceId": "c80684caaf4ad284acde007346c1230969d433c0fdf94f65066ccea54d4c69ee"
+    "instanceId": "yourinstanceID"
   },
   "nodeGroups": [],
   "id": "sQovIpEeNoZIoykY",
