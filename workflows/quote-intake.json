@@ -1,0 +1,446 @@
+
+{
+  "name": "quote flow 1",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailReadImap",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "d2bf6155-7ad2-428a-9ae2-095daef7ec15",
+      "name": "Email Trigger (IMAP)",
+      "credentials": {
+        "imap": {
+          "id": "erIn03yWL6Rx5OCB",
+          "name": "IMAP account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "01437b76-0751-483c-b82f-da0377575da7",
+              "name": "sender",
+              "value": "={{$json.from}}",
+              "type": "string"
+            },
+            {
+              "id": "bbc6121c-f09e-4495-9a5d-ce22784ea872",
+              "name": "subject",
+              "value": "= {{$json.subject}}",
+              "type": "string"
+            },
+            {
+              "id": "29f976a8-265a-4b22-8932-779eefd585f3",
+              "name": "date",
+              "value": "= {{$json.date}}",
+              "type": "string"
+            },
+            {
+              "id": "362199d6-9075-4329-86cc-3049d4396a9a",
+              "name": "body",
+              "value": "={{ $json.textPlain || $json.textHtml || '' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        224,
+        0
+      ],
+      "id": "95bd4037-5c30-416b-9347-9cec16f4f2ef",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "tableId": "quote_requests",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "sender_email",
+              "fieldValue": "={{$json.sender}}"
+            },
+            {
+              "fieldId": "raw_email",
+              "fieldValue": "={{$json.body}}"
+            },
+            {
+              "fieldId": "status",
+              "fieldValue": "NEW"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        448,
+        0
+      ],
+      "id": "93ef1899-7b9a-453e-a446-9221ad8eac38",
+      "name": "Create a row",
+      "credentials": {
+        "supabaseApi": {
+          "id": "qxCcsJn5yD2Y6we6",
+          "name": "Supabase account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-3.5-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-3.5-flash"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=Analyze the following customer quotation request email.\n\nExtract the information and return ONLY valid JSON with this structure:\n\n{\n  \"company\": null,\n  \"service\": null,\n  \"location\": null,\n  \"number_of_sites\": null,\n  \"deadline\": null,\n  \"budget\": null,\n  \"site_size\": null,\n  \"summary\": null,\n  \"missing_information\": []\n}\n\nRules:\n- Do not invent information.\n- If a value is missing, return null.\n- number_of_sites must be a number or null.\n- missing_information must be an array of short strings.\n- Ignore signatures, tracking links, HTML, disclaimers and unrelated email content.\n- Return JSON only, without markdown or explanations.\n\nCustomer email:\n\n{{$json.raw_email}}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        672,
+        0
+      ],
+      "id": "8dc895e5-e055-4fd7-adff-8c87b88b33fc",
+      "name": "Message a model",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "googlePalmApi": {
+          "id": "VieONtdaNq30Nlse",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f508caf4-0fc3-4a77-b026-3125144293e4",
+              "name": "company",
+              "value": "={{ JSON.parse($json.content.parts[0].text).company }}",
+              "type": "string"
+            },
+            {
+              "id": "3225a918-0822-4904-a3b8-ed6fa1dd0d03",
+              "name": "service",
+              "value": "={{ JSON.parse($json.content.parts[0].text).service }}",
+              "type": "string"
+            },
+            {
+              "id": "6e28ba5c-ae01-4136-a87a-4ca5b81cd596",
+              "name": "location",
+              "value": "={{ JSON.parse($json.content.parts[0].text).location }}",
+              "type": "string"
+            },
+            {
+              "id": "645fb048-e438-4f8b-9f21-4626af6ed0e2",
+              "name": "number_of_sites",
+              "value": "={{ JSON.parse($json.content.parts[0].text).number_of_sites }}",
+              "type": "number"
+            },
+            {
+              "id": "283ead57-41e8-4a8a-9344-2f9df55359db",
+              "name": "missing_information",
+              "value": "={{ JSON.parse($json.content.parts[0].text).missing_information }}",
+              "type": "array"
+            },
+            {
+              "id": "65552136-2ac7-4d5c-a22a-48ffe139dd04",
+              "name": "deadline",
+              "value": "={{ JSON.parse($json.content.parts[0].text).deadline }}",
+              "type": "string"
+            },
+            {
+              "id": "4cb10103-ba07-4ecc-9801-2f77261d071d",
+              "name": "budget",
+              "value": "={{ JSON.parse($json.content.parts[0].text).budget }}",
+              "type": "string"
+            },
+            {
+              "id": "b094ee54-8851-4133-a403-ab35dc3ff133",
+              "name": "site_size",
+              "value": "={{ JSON.parse($json.content.parts[0].text).site_size }}",
+              "type": "string"
+            },
+            {
+              "id": "101506b8-b8ba-4331-8460-fa9a50edd2c8",
+              "name": "summary",
+              "value": "={{ JSON.parse($json.content.parts[0].text).summary }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1008,
+        -112
+      ],
+      "id": "9ae4e4de-9587-4771-8d22-c36a184c9249",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "quote_requests",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $('Create a row').item.json.id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "company",
+              "fieldValue": "={{$json.company}}"
+            },
+            {
+              "fieldId": "service",
+              "fieldValue": "={{$json.service}}"
+            },
+            {
+              "fieldId": "location",
+              "fieldValue": "={{$json.location}}"
+            },
+            {
+              "fieldId": "number_of_sites",
+              "fieldValue": "={{$json.number_of_sites}}"
+            },
+            {
+              "fieldId": "deadline",
+              "fieldValue": "={{$json.deadline}}"
+            },
+            {
+              "fieldId": "budget",
+              "fieldValue": "={{$json.budget}}"
+            },
+            {
+              "fieldId": "site_size",
+              "fieldValue": "={{$json.site_size}}"
+            },
+            {
+              "fieldId": "summary",
+              "fieldValue": "={{$json.summary}}"
+            },
+            {
+              "fieldId": "missing_information",
+              "fieldValue": "={{$json.missing_information}}"
+            },
+            {
+              "fieldId": "status",
+              "fieldValue": "={{ $json.missing_information.length > 0 ? 'NEEDS_INFO' : 'READY_FOR_REVIEW' }}"
+            },
+            {
+              "fieldId": "suggested_reply",
+              "fieldValue": "={{\n  $json.missing_information.length > 0\n  ? `Buongiorno,\n\ngrazie per la richiesta relativa a ${$json.service} a ${$json.location}.\n\nPer poter procedere con la valutazione, avremmo bisogno delle seguenti informazioni aggiuntive: ${$json.missing_information.join(', ')}.\n\nGrazie.`\n  : `Buongiorno,\n\ngrazie per la richiesta relativa a ${$json.service} a ${$json.location}.\n\nAbbiamo ricevuto tutte le informazioni necessarie. La richiesta è pronta per essere valutata dal nostro team.\n\nGrazie.`\n}}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1520,
+        0
+      ],
+      "id": "d8b30d84-2b52-42b0-bdf7-aaf0c4aa5576",
+      "name": "Update a row",
+      "credentials": {
+        "supabaseApi": {
+          "id": "qxCcsJn5yD2Y6we6",
+          "name": "Supabase account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "581dc667-418c-4a6a-bcb0-9099fe09165a",
+              "name": "status",
+              "value": "={{ $json.missing_information.length > 0 ? 'NEEDS_INFO' : 'READY_FOR_REVIEW' }}",
+              "type": "string"
+            },
+            {
+              "id": "5a94014c-f5e8-4f11-9c6d-31bcc121b0a5",
+              "name": "suggested_reply",
+              "value": "={{   $json.missing_information.length > 0   ? `Buongiorno,  grazie per la richiesta relativa a ${$json.service} a ${$json.location}.  Per poter procedere con la valutazione, avremmo bisogno delle seguenti informazioni aggiuntive: ${$json.missing_information.join(', ')}.  Grazie.`   : `Buongiorno,  grazie per la richiesta relativa a ${$json.service} a ${$json.location}.  Abbiamo ricevuto tutte le informazioni necessarie. La richiesta è pronta per essere valutata dal nostro team.  Grazie.` }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1312,
+        0
+      ],
+      "id": "af76003d-2652-455a-b47b-c2cad78ca6a5",
+      "name": "Edit Fields2"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "quote_requests",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $('Create a row').item.json.id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "status",
+              "fieldValue": "PROCESSING_FAILED"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1008,
+        128
+      ],
+      "id": "192597db-ca38-4670-87be-849da30a06ab",
+      "name": "Update a row1",
+      "credentials": {
+        "supabaseApi": {
+          "id": "qxCcsJn5yD2Y6we6",
+          "name": "Supabase account 3"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Email Trigger (IMAP)": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Create a row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a row": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update a row1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields2": {
+      "main": [
+        [
+          {
+            "node": "Update a row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update a row1": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "2b9d6a32-13c8-4642-a1ba-79e80f4bd6ab",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "c80684caaf4ad284acde007346c1230969d433c0fdf94f65066ccea54d4c69ee"
+  },
+  "nodeGroups": [],
+  "id": "sQovIpEeNoZIoykY",
+  "tags": []
+}
